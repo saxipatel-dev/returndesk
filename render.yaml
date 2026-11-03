@@ -1,0 +1,40 @@
+# Render Blueprint: managed PostgreSQL + API container + web container.
+# Create it from the Render dashboard (New > Blueprint) after pushing to GitHub.
+# Review the plans before applying; free plans sleep and the free database expires.
+
+databases:
+  - name: returndesk-db
+    plan: free
+    databaseName: returndesk
+    user: returndesk
+
+services:
+  - type: web
+    name: returndesk-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: returndesk-db
+          property: connectionString
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: CORS_ORIGINS
+        sync: false # set to the web service URL, e.g. https://returndesk-web.onrender.com
+      - key: SEED_DEMO_DATA
+        value: "true" # demo deployment only; set to "false" for anything real
+
+  - type: web
+    name: returndesk-web
+    runtime: docker
+    rootDir: frontend
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: API_UPSTREAM
+        sync: false # the API service URL, e.g. https://returndesk-api.onrender.com
