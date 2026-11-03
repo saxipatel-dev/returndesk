@@ -9,7 +9,7 @@ each part maps to the code. It's the checklist I used while building.
 |---|---|---|
 | MVP | Accounts, seeded purchases, return request, queue, decision, history, dashboard | Done |
 | Extension | Warranty requests, attachments, comments, notifications, analytics | Done |
-| Portfolio polish | Tests, CI, Docker, screenshots, README, deployment config | Done (live deployment needs a hosting account) |
+| Polish | Tests, CI, Docker, screenshots, README, deployment config | Done (live deployment needs a hosting account) |
 | Out of scope | Payments, real order-system integration, ML, multi-tenant SaaS, microservices | Not built, on purpose |
 
 ## Roles

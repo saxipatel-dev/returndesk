@@ -31,9 +31,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-slate-500">
-          A portfolio project. All accounts, orders and products are fictional demo data.
-        </p>
+        <p className="relative text-xs text-slate-500">All accounts, orders and products are fictional demo data.</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 py-12 sm:px-8">

@@ -23,9 +23,9 @@ ReturnDesk handles what happens after a customer wants to send something back. C
 work queue, and administrators manage the catalog, staff accounts and return policy, with an
 analytics dashboard that shows how it's all going.
 
-I built it as a self-directed portfolio project to practice a realistic business workflow end to
-end: relational data modeling, role-based access control, a status workflow with an audit trail,
-file uploads, and reporting. All customers, orders and products are fictional demo data.
+It covers the full workflow end to end: relational data modeling, role-based access control, a
+status workflow with an audit trail, file uploads, and reporting. All customers, orders and products
+in the app are fictional demo data.
 
 ![Admin analytics dashboard](docs/screenshots/10-admin-analytics.png)
 

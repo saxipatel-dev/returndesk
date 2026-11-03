@@ -22,5 +22,5 @@ All demo accounts use the password `Demo#2026`. The login page has buttons that 
 6. **Behind the scenes.** Open `/api/docs` for the OpenAPI docs, show one test command
    (`pytest` or `npx playwright test`), the GitHub Actions run, and the repository layout.
 
-One-line summary: *a self-directed full-stack application that models product return and warranty
+One-line summary: *a full-stack application that models product return and warranty
 workflows, built with React, FastAPI and PostgreSQL.*
