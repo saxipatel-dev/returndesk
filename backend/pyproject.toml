@@ -1,0 +1,25 @@
+[project]
+name = "returndesk-backend"
+version = "1.0.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+# FastAPI's Depends()/Query() defaults are idiomatic, not a bug.
+ignore = ["B008", "UP046"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    # Starlette suggests a newer HTTP client for TestClient; httpx still works fine.
+    "ignore:Using `httpx` with `starlette.testclient`",
+]
