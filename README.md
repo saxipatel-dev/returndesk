@@ -12,7 +12,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-slate.svg)
 
-[Features](#features) · [Screenshots](#screenshots) · [Tech stack](#tech-stack) · [Run it locally](#run-it-locally) · [Tests](#tests) · [Docs](#documentation)
+[Features](#features) · [Screenshots](#screenshots) · [Tech stack](#tech-stack) · [Architecture](#architecture-and-database) · [API](#api) · [Run it locally](#run-it-locally) · [Tests](#tests) · [Docs](#documentation)
 
 </div>
 
@@ -100,6 +100,40 @@ data by a Playwright script, so they always match the current UI.
 | Auth | Server-side sessions, `HttpOnly` cookie, CSRF token, Argon2 password hashing | Sessions can be revoked instantly; tokens aren't readable by scripts |
 | Testing | Pytest, Vitest + React Testing Library, Playwright | API rules, UI components and full browser journeys |
 | Tooling | Docker Compose, nginx, GitHub Actions, Ruff, ESLint, Prettier | One-command local stack and checks on every push |
+
+## Architecture and database
+
+```mermaid
+flowchart LR
+    B["React app"] -- "/api + session cookie" --> N["nginx (Docker)<br/>or Vite (dev)"]
+    N --> A["FastAPI routes"]
+    A --> S["Business rules<br/>services/"]
+    S --> P[("PostgreSQL")]
+    A --> U[("Uploaded files")]
+```
+
+The browser only ever talks to one origin: nginx (or Vite in development) serves the React app and
+forwards `/api` to FastAPI. Route handlers stay thin; the rules for eligibility, permissions and
+status changes live in `backend/app/services`. Requests move through
+`pending_review → under_review → approved → fulfilled → closed`, or end as `rejected` or `cancelled`.
+
+The PostgreSQL schema has 11 tables (users, products, purchases, purchase items, return requests,
+events, comments, attachments, notifications, sessions and store settings), managed with Alembic
+migrations. Money is stored as `NUMERIC`, timestamps are timezone-aware, and every status change is
+recorded in an append-only `return_events` table.
+
+- [Architecture details](docs/architecture/README.md): components, request lifecycle, sign-in flow
+- [Database design](docs/database/README.md): ER diagram and schema notes
+- [Design decisions](docs/project/DECISIONS.md): why sessions instead of JWT, SQL analytics, row locks
+
+## API
+
+FastAPI generates interactive documentation: with the app running, open
+**http://localhost:8000/api/docs** (or http://localhost:8080/api/docs with Docker). All endpoints sit
+under `/api`, return JSON, and check permissions on the server. The
+[API reference](docs/api/README.md) lists every endpoint with its access rules, error codes, metric
+definitions and `curl` examples, and the OpenAPI schema is in
+[docs/api/openapi.json](docs/api/openapi.json).
 
 ## Run it locally
 
@@ -206,7 +240,7 @@ The login page has buttons that fill these in. A guided five-minute walkthrough 
 
 Linting: `ruff check .` (backend) and `npm run lint` (frontend). GitHub Actions runs all of it,
 plus a migration up/down check and the Docker builds, on every push. The latest results are in
-[TESTING_REPORT.md](TESTING_REPORT.md).
+[testing report](docs/project/TESTING_REPORT.md).
 
 ## Project structure
 
@@ -229,27 +263,10 @@ returndesk/
 │   │   ├── pages/        # auth, customer, staff, admin, shared
 │   │   └── ...           # context, hooks, utils
 │   └── tests/            # unit/ (Vitest) and e2e/ (Playwright)
-├── docs/                 # architecture, database, API, testing, screenshots
+├── docs/                 # architecture, database, API, testing, project records, screenshots
 ├── docker-compose.yml
 └── render.yaml           # deployment blueprint, kept for later (not deployed)
 ```
-
-## How it works
-
-```mermaid
-flowchart LR
-    B["React app"] -- "/api + session cookie" --> N["nginx (Docker)<br/>or Vite (dev)"]
-    N --> A["FastAPI routes"]
-    A --> S["Business rules<br/>services/"]
-    S --> P[("PostgreSQL")]
-    A --> U[("Uploaded files")]
-```
-
-The browser only ever talks to one origin: nginx (or Vite in development) serves the React app and
-forwards `/api` to FastAPI. Requests move through
-`pending_review → under_review → approved → fulfilled → closed`, or end as `rejected` or `cancelled`.
-The reasoning behind the main choices (sessions vs. JWT, SQL analytics, row locks) is in
-[DECISIONS.md](DECISIONS.md).
 
 ## Documentation
 
@@ -261,7 +278,7 @@ The reasoning behind the main choices (sessions vs. JWT, SQL analytics, row lock
 | [Requirements](docs/requirements/README.md) | Scope, roles, screens, business rules and the tests that cover them |
 | [Testing guide](docs/testing/README.md) | How the test suites are set up and run |
 | [Deployment](docs/DEPLOYMENT.md) | Ready-to-use cloud setup for later (nothing is deployed) |
-| [Testing report](TESTING_REPORT.md) · [Progress](PROJECT_PROGRESS.md) · [Decisions](DECISIONS.md) · [Known issues](KNOWN_ISSUES.md) | Project records |
+| [Project records](docs/project/) | [Testing report](docs/project/TESTING_REPORT.md), [progress log](docs/project/PROJECT_PROGRESS.md), [decisions](docs/project/DECISIONS.md), [known issues](docs/project/KNOWN_ISSUES.md) |
 
 ## Status and limitations
 
@@ -273,8 +290,4 @@ public server; the deployment configuration is ready for when it is. Simplified 
 - Uploaded files are stored on local disk
 - No login rate limiting yet
 
-Details are in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
-
-## License
-
-[MIT](LICENSE). Built by [saxipatel-dev](https://github.com/saxipatel-dev) as a self-directed portfolio project.
+Details are in [docs/project/KNOWN_ISSUES.md](docs/project/KNOWN_ISSUES.md).

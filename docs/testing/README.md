@@ -1,6 +1,6 @@
 # Testing guide
 
-Results from the latest run are in [TESTING_REPORT.md](../../TESTING_REPORT.md).
+Results from the latest run are in [TESTING_REPORT.md](../project/TESTING_REPORT.md).
 
 ## Layers
 

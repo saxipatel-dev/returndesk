@@ -6,7 +6,7 @@ Honest list of what isn't done or has caveats. Nothing here blocks the local dem
 
 | Item | Why / what's needed |
 |---|---|
-| **Public deployment** | `render.yaml` and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) are ready, but deploying needs a hosting account, so there's no live URL yet. |
+| **Public deployment** | `render.yaml` and [docs/DEPLOYMENT.md](../DEPLOYMENT.md) are ready, but deploying needs a hosting account, so there's no live URL yet. |
 | Password reset / email verification | Needs an email provider; out of scope for this version. |
 | Login rate limiting | Not implemented. A reverse proxy rule or a small in-app limiter would be the next step before real use. |
 
