@@ -22,7 +22,7 @@ marked **NOT RUN** with the reason.
 | Dependency audit (shipped code) | `npm audit --omit=dev` | **PASS**: 0 vulnerabilities |
 | Dependency audit (dev tools) | `npm audit` | 6 moderate, ESLint toolchain only (see KNOWN_ISSUES.md) |
 | Secret scan | `git grep` for key/secret/password literals | **PASS**: only documented demo/test values |
-| GitHub Actions | `.github/workflows/ci.yml` | **NOT RUN**: repository not pushed yet. Same steps were run locally above. |
+| GitHub Actions | `.github/workflows/ci.yml` | **PASS**: [run 41568261296](https://github.com/saxipatel-dev/returndesk/actions/runs/41568261296) on 2026-11-03, all 4 jobs green (backend 47 s, frontend 20 s, E2E 1 m 35 s, Docker build 26 s) |
 | Live deployment smoke test | see docs/DEPLOYMENT.md | **NOT RUN**: needs a hosting account |
 | Python dependency audit | `pip-audit` | **NOT RUN**: tool not installed here |
 

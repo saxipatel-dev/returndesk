@@ -158,6 +158,8 @@ createdb -O returndesk returndesk_e2e
 cd frontend && npx playwright install chromium && npx playwright test --project=e2e
 ```
 
+[![CI](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml)
+
 GitHub Actions runs linting, migrations (up/down), all three test suites and the Docker builds on
 every push. Latest local results are recorded in [TESTING_REPORT.md](TESTING_REPORT.md).
 

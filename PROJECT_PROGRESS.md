@@ -14,7 +14,7 @@ Milestone log. "Verified" means the listed checks were actually run and passed; 
 | 6 | Analytics and visualizations | Verified | same as 5 |
 | 7 | Warranty, uploads, comments, notifications | Verified | included in 2–5 |
 | 8 | Testing and bug fixing | Verified | `test: …` commits |
-| 9 | Deployment and GitHub preparation | Config done; **not deployed**, **CI not run on GitHub** | `ci: …`, `docs: …` |
+| 9 | Deployment and GitHub preparation | Pushed to GitHub, CI green; **not deployed** | `ci: …`, `docs: …` |
 | 10 | Final verification | Done (local) | this file + TESTING_REPORT.md |
 
 ---
@@ -81,17 +81,8 @@ Milestone log. "Verified" means the listed checks were actually run and passed; 
 - **Built:** GitHub Actions workflow (backend lint/migrations/tests, frontend lint/tests/build, E2E,
   Docker build), Render blueprint, deployment guide, README, architecture/ER diagrams, API docs and
   OpenAPI schema, screenshots, MIT license.
-- **Not done:** pushing to GitHub and deploying both need the account owner (see below).
+- **Pushed** to https://github.com/saxipatel-dev/returndesk on 2026-11-03; the first CI run passed all 4 jobs.
+- **Not done:** cloud deployment (needs a hosting account, see docs/DEPLOYMENT.md).
 
 ### Milestone 10: Final verification
 - Full local run of every check in TESTING_REPORT.md on 2026-11-02: all passing.
-
-## Publishing to GitHub (to do by the repository owner)
-
-```bash
-cd returndesk
-gh repo create saxipatel-dev/returndesk --public --source . --push
-# or: git remote add origin git@github.com:saxipatel-dev/returndesk.git && git push -u origin main
-```
-
-After the first push, check the Actions tab and update TESTING_REPORT.md with the CI result.

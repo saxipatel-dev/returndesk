@@ -7,7 +7,6 @@ Honest list of what isn't done or has caveats. Nothing here blocks the local dem
 | Item | Why / what's needed |
 |---|---|
 | **Public deployment** | `render.yaml` and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) are ready, but deploying needs a hosting account, so there's no live URL yet. |
-| **GitHub Actions run** | `.github/workflows/ci.yml` is written and every step it runs passes locally (see TESTING_REPORT.md), but it hasn't run on GitHub because the repository hasn't been pushed. |
 | Password reset / email verification | Needs an email provider; out of scope for this version. |
 | Login rate limiting | Not implemented. A reverse proxy rule or a small in-app limiter would be the next step before real use. |
 
@@ -35,5 +34,7 @@ Honest list of what isn't done or has caveats. Nothing here blocks the local dem
 
 * Local development used PostgreSQL 14 (Homebrew); Docker and CI use PostgreSQL 16. Nothing in the
   schema depends on 16-only features.
+* GitHub Actions warns that `actions/checkout@v4`, `setup-python@v5` and `setup-node@v4` target the
+  deprecated Node.js 20 runtime (they still run, on Node 24). Bump them when newer majors are available.
 * The Starlette test client prints a deprecation notice about `httpx`; it's filtered in
   `pyproject.toml` and doesn't affect results.
