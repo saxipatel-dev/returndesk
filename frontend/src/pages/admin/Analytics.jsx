@@ -101,7 +101,11 @@ export default function Analytics() {
             <ReasonsChart data={trends.data.by_reason} />
             <ResolutionChart data={trends.data.resolution_time} />
             <DecisionsChart data={trends.data.decisions} />
-            <WorkloadChart data={trends.data.workload} unassigned={summary.data.unassigned_open} className="lg:col-span-2" />
+            <WorkloadChart
+              data={trends.data.workload}
+              unassigned={summary.data.unassigned_open}
+              className="lg:col-span-2"
+            />
           </div>
         </div>
       )}

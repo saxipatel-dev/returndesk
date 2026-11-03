@@ -32,7 +32,12 @@ describe("validateRegistration", () => {
 
 describe("validateRequest", () => {
   const item = { eligibility: { returnable_quantity: 2, warranty_claimable_quantity: 1 } };
-  const form = { quantity: "1", reason: "defective", requested_resolution: "refund", description: "Broken screen on arrival." };
+  const form = {
+    quantity: "1",
+    reason: "defective",
+    requested_resolution: "refund",
+    description: "Broken screen on arrival.",
+  };
 
   it("passes a valid return", () => {
     expect(validateRequest(form, item, "return")).toEqual({});
@@ -46,14 +51,25 @@ describe("validateRequest", () => {
   it("rejects zero, decimals and missing fields", () => {
     expect(validateRequest({ ...form, quantity: "0" }, item, "return").quantity).toBeDefined();
     expect(validateRequest({ ...form, quantity: "1.5" }, item, "return").quantity).toBeDefined();
-    const errors = validateRequest({ quantity: "1", reason: "", requested_resolution: "", description: "short" }, null, "return");
+    const errors = validateRequest(
+      { quantity: "1", reason: "", requested_resolution: "", description: "short" },
+      null,
+      "return",
+    );
     expect(Object.keys(errors).sort()).toEqual(["description", "purchase_item_id", "reason", "requested_resolution"]);
   });
 });
 
 describe("other validators", () => {
   it("validates products", () => {
-    const product = { sku: "AB-1", name: "Lamp", category: "Home", price: "19.99", warranty_days: "365", description: "" };
+    const product = {
+      sku: "AB-1",
+      name: "Lamp",
+      category: "Home",
+      price: "19.99",
+      warranty_days: "365",
+      description: "",
+    };
     expect(validateProduct(product, true)).toEqual({});
     expect(validateProduct({ ...product, price: "-1" }, true).price).toBeDefined();
     expect(validateProduct({ ...product, price: "1.999" }, true).price).toMatch(/two decimals/);
@@ -99,7 +115,10 @@ describe("formatting", () => {
 
   it("builds date ranges", () => {
     expect(rangeToDates("all")).toEqual({});
-    expect(rangeToDates("custom", { from: "2026-01-01", to: "" })).toEqual({ date_from: "2026-01-01", date_to: undefined });
+    expect(rangeToDates("custom", { from: "2026-01-01", to: "" })).toEqual({
+      date_from: "2026-01-01",
+      date_to: undefined,
+    });
     const { date_from, date_to } = rangeToDates("30");
     expect((new Date(date_to) - new Date(date_from)) / 86400000).toBe(29);
   });
