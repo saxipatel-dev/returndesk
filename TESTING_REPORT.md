@@ -1,8 +1,9 @@
 # Testing report
 
-Every result below was produced by actually running the command, on **2026-11-02**, on macOS
-(Apple Silicon), Python 3.12.16, Node 22.23.4, PostgreSQL 14.19. Anything that couldn't be run here is
-marked **NOT RUN** with the reason.
+Every result below was produced by actually running the command on macOS (Apple Silicon),
+Python 3.12.16, Node 22.23.4, PostgreSQL 14.19 (local) / 16 (Docker and CI). First full run
+2026-11-02; final verification 2026-11-03 (see [Final local verification](#final-local-verification-2026-11-03)).
+Anything that couldn't be run is marked **NOT RUN** with the reason.
 
 ## Summary
 
@@ -17,7 +18,7 @@ marked **NOT RUN** with the reason.
 | Frontend formatting | `npm run format:check` | **PASS** |
 | Frontend unit/component tests | `npm test` (Vitest + RTL) | **PASS**: 36 passed in 3 files |
 | Production build | `npm run build` | **PASS** (routes code-split; largest chunk is Recharts, ~117 kB gzip) |
-| End-to-end | `npx playwright test --project=e2e` | **PASS**: 5 passed (~19 s) |
+| End-to-end | `npx playwright test --project=e2e` | **PASS**: 11 passed (~43 s) |
 | Docker Compose stack | `docker compose up --build` | **PASS**: db/api healthy, migrations + seed ran, SPA served on :8080, login/analytics/upload via nginx, data persisted across an API restart |
 | Dependency audit (shipped code) | `npm audit --omit=dev` | **PASS**: 0 vulnerabilities |
 | Dependency audit (dev tools) | `npm audit` | 6 moderate, ESLint toolchain only (see KNOWN_ISSUES.md) |
@@ -45,15 +46,26 @@ marked **NOT RUN** with the reason.
 | `components.test.jsx` | 14 | status/type badges, empty and error states (retry), confirm dialog (confirm, cancel, Escape, closed), pagination, KPI row (N/A and with data), chart empty state and accessible text summary, requests table links and staff columns, timeline order and notes, progress bar for rejected requests |
 | `auth.test.jsx` | 6 | signed-out redirect to login, login validation without API call, server error shown, successful customer login lands on dashboard, customer redirected away from admin page, registration password rule |
 
-## End-to-end tests (5)
+## End-to-end tests (11)
 
-Run against a real FastAPI server and PostgreSQL database (`returndesk_e2e`, reset and seeded on each run):
+Run against a real FastAPI server and PostgreSQL database (`returndesk_e2e`, reset and seeded on each run).
+
+`return-flow.spec.js`:
 
 1. Customer submits a return → employee finds it by reference, assigns, approves and records fulfillment → customer sees "Fulfilled", the history, the fulfillment note and an unread notification.
 2. Admin assigns a request to an employee and tries to reject without a reason (blocked with a message), then rejects with one.
 3. Customer navigating to `/staff/queue` and `/admin/products` is redirected to their dashboard.
 4. Admin dashboard shows the 4 KPIs and all 7 chart titles with rendered charts; a filter combination with no matches shows empty states.
 5. Admin adds a product and archives it.
+
+`features.spec.js`:
+
+6. Customer files a **warranty claim** (repair outcome) with a photo; the file and "File attached" event appear; customer sends a message. The employee sees the file, replies, and adds an **internal note**. The customer sees the reply and a notification but **not** the internal note.
+7. Customer submits and then **cancels** a request; the cancel button disappears.
+8. Customer filters **My requests** by status, sees return-window badges on **My purchases**, and edits their **profile** name.
+9. Employee dashboard loads with workload; **queue filter** by "Unassigned" is reflected in the URL; assign and **release** a request (back to pending, "Returned to queue" in history); employee is redirected away from `/admin/users`.
+10. Admin **creates a staff account** and deactivates it, changes the **return window** and restores it, and **downloads the CSV report**.
+11. Signed-out visitor to `/admin/analytics` goes to login; unknown URL shows **Page not found**.
 
 ## Manual checks
 
@@ -76,3 +88,19 @@ Done in the browser against the dev servers and the Docker stack:
 | Build | Single 850 kB bundle | Route-level code splitting with `React.lazy` |
 | Playwright | Screenshot run raced sign-out and the next sign-in | Wait for the `/login` URL after signing out |
 | Playwright | Ambiguous text locators ("Pending review" appears in the KPI, filter and legend) | Scoped locators in the test |
+| Playwright (2026-11-03) | Text typed into the message box while a previous message was still sending was wiped when the box cleared | Message box is read-only while sending |
+
+## Final local verification (2026-11-03)
+
+Goal: confirm the project works for someone cloning it from GitHub, without deploying anything.
+
+| Check | How | Result |
+|---|---|---|
+| Fresh clone | `git clone https://github.com/saxipatel-dev/returndesk.git` into an empty folder | **PASS**: 137 files, matches `main` |
+| README setup, Option B | New venv, `pip install -r requirements-dev.txt`, `alembic upgrade head` on an empty database, `python -m app.seed`, `npm ci`, `npm run build` | **PASS** |
+| All test suites in the clone | `ruff`, `pytest`, `npm run lint`, `format:check`, `vitest`, `playwright --project=e2e` | **PASS**: 85 + 36 + 11, lint/format clean |
+| README setup, Option A | `cp .env.example .env && docker compose up --build` in the clone | **PASS**: db/api healthy, migrations + seed ran, `/health` ok, admin login and all 7 chart series returned data through nginx |
+| Manual browser check | Dev servers on :8000/:5173, signed in as employee, dashboard and review screen | **PASS** |
+| Secrets in git history | Searched every commit for `.env`/key files, GitHub/AWS/Slack/OpenAI token patterns, private keys and password literals | **PASS**: none found. Only fictional `@example.com` accounts and the documented demo password |
+| GitHub Actions | Runs [41568261296](https://github.com/saxipatel-dev/returndesk/actions/runs/41568261296) and [41568570725](https://github.com/saxipatel-dev/returndesk/actions/runs/41568570725) | **PASS**: 4/4 jobs each |
+| Deployment | — | **Not done, on purpose.** No hosting services were created; `render.yaml` and `docs/DEPLOYMENT.md` are kept for later |

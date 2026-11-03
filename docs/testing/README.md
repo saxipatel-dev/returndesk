@@ -8,7 +8,7 @@ Results from the latest run are in [TESTING_REPORT.md](../../TESTING_REPORT.md).
 |---|---|---|---|
 | API, rules, permissions, analytics | Pytest + FastAPI TestClient | `backend/tests` | PostgreSQL database `returndesk_test` |
 | Components, forms, utilities | Vitest + React Testing Library (jsdom) | `frontend/tests/unit` | nothing |
-| Full user journeys | Playwright (Chromium) | `frontend/tests/e2e` | PostgreSQL database `returndesk_e2e`, backend venv |
+| Full user journeys (11 tests) | Playwright (Chromium) | `frontend/tests/e2e` | PostgreSQL database `returndesk_e2e`, backend venv |
 
 Backend tests run against real PostgreSQL rather than SQLite, because the app relies on
 Postgres behavior (row locks, `date_trunc`, check constraints). Tables are created once per run

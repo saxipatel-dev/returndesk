@@ -74,7 +74,7 @@ Milestone log. "Verified" means the listed checks were actually run and passed; 
 
 ### Milestone 8: Testing and bug fixing
 - **Built:** Vitest + RTL unit/component tests, Playwright E2E with its own database, screenshot script.
-- **Result:** 85 backend + 36 frontend + 5 E2E tests passing; lint and format clean. Bugs found and fixed
+- **Result:** 85 backend + 36 frontend + 11 E2E tests passing (6 E2E feature tests added on 2026-11-03); lint and format clean. Bugs found and fixed
   are listed in TESTING_REPORT.md.
 
 ### Milestone 9: Deployment and GitHub preparation
@@ -86,3 +86,10 @@ Milestone log. "Verified" means the listed checks were actually run and passed; 
 
 ### Milestone 10: Final verification
 - Full local run of every check in TESTING_REPORT.md on 2026-11-02: all passing.
+
+### Final local verification (2026-11-03)
+- Decided **not to deploy** for now; deployment config kept as-is for later.
+- Verified from a fresh clone of the GitHub repo: README setup (both options), all test suites, Docker stack.
+- Added `features.spec.js` (6 E2E tests: warranty + uploads, comments + internal notes, cancel, profile,
+  queue filters + release, staff management, policy settings, CSV export, 404/auth redirects).
+- Fixed a message-box race found by the new tests; rewrote the README; scanned history for secrets (clean).

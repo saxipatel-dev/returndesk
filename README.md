@@ -1,97 +1,114 @@
+<div align="center">
+
+<img src="frontend/public/favicon.svg" alt="" width="56" height="56" />
+
 # ReturnDesk
 
-**Product returns and warranty management for a small online store.** Customers submit return
-or warranty requests against their orders, support staff review them in a shared queue, and
-administrators manage the catalog, staff and return policy and see how things are going on an
-analytics dashboard.
+**Product returns and warranty management for a small online store**
 
-I built this as a self-directed portfolio project to practice a realistic business workflow
-end to end: relational data modeling, role-based access, a state machine with an audit trail,
-and reporting. All customers, orders and products are fictional demo data.
+[![CI](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.162-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-slate.svg)
 
-![Admin analytics dashboard](docs/screenshots/10-admin-analytics.png)
+[Features](#features) · [Screenshots](#screenshots) · [Tech stack](#tech-stack) · [Run it locally](#run-it-locally) · [Tests](#tests) · [Docs](#documentation)
 
-**Stack:** React 19 · Vite · Tailwind CSS · Recharts · FastAPI · SQLAlchemy 2 · Pydantic 2 ·
-Alembic · PostgreSQL · Pytest · Vitest + React Testing Library · Playwright · Docker Compose ·
-GitHub Actions
+</div>
 
 ---
 
-## Contents
+ReturnDesk handles what happens after a customer wants to send something back. Customers submit
+**return** or **warranty** requests against their orders, support staff review them in a shared
+work queue, and administrators manage the catalog, staff accounts and return policy, with an
+analytics dashboard that shows how it's all going.
 
-- [What it does](#what-it-does)
-- [Screenshots](#screenshots)
-- [Architecture](#architecture)
-- [Running it locally](#running-it-locally)
-- [Demo accounts](#demo-accounts)
-- [Tests](#tests)
-- [Project structure](#project-structure)
-- [Design decisions](#design-decisions)
-- [Limitations and future work](#limitations-and-future-work)
+I built it as a self-directed portfolio project to practice a realistic business workflow end to
+end: relational data modeling, role-based access control, a status workflow with an audit trail,
+file uploads, and reporting. All customers, orders and products are fictional demo data.
 
-## What it does
+![Admin analytics dashboard](docs/screenshots/10-admin-analytics.png)
 
-**Customers**
-- Register and sign in; see their orders with what's still returnable and until when
-- Submit a **return** (within the store's return window) or a **warranty claim** (within the product's warranty period)
-- Attach photos or receipts (JPG/PNG/WEBP/PDF, checked server-side)
-- Follow each request on a progress bar and timeline, message support, cancel before a decision
-- Get in-app notifications whenever something changes
+## Features
 
-**Employees**
-- A work queue with search (reference, order, product, customer), status/type/date/assignee filters and sorting
-- Assign requests to themselves, approve or reject with an explanation, record a (simulated) refund, replacement or repair
-- Internal notes that customers never see, and a dashboard with their own open work and team workload
+### Customer portal
+- Register, sign in, and see every order with **what can still be returned and until when**
+- Submit a **return** (inside the store's return window) or a **warranty claim** (inside the product's warranty period)
+- Attach photos or receipts: JPG, PNG, WEBP or PDF up to 5 MB, checked on the server
+- Track each request with a progress bar and a full timeline, message support, cancel before a decision
+- In-app notifications whenever a request changes
 
-**Administrators**
-- Analytics dashboard: 4 KPIs and 7 charts calculated live in PostgreSQL, filterable by date range, status and type, with CSV export
-- Product catalog management (add, edit, archive)
-- Staff accounts (create, change role, deactivate, which signs them out immediately)
-- Return policy settings (return window, cancellations, attachment limit)
-- Everything an employee can do, plus assigning requests to anyone
+### Employee portal
+- Dashboard with the employee's own open work, requests waiting for pickup, and team workload
+- Work queue with search (reference, order, product, customer), filters for status, type, dates and assignee, sorting and paging
+- Assign requests to yourself or release them, **approve or reject** (a rejection always needs a reason), record a simulated refund, replacement or repair
+- **Internal notes** that customers never see
 
-**Rules the API enforces** (not just the UI): customers only ever see their own data, quantities
-can't exceed what's still returnable, invalid status changes are rejected, a rejection needs a
-reason, and decisions/fulfillment can't happen twice, even if two people click at the same moment.
+### Administrator portal
+- **Analytics dashboard**: 4 KPI cards and 7 charts calculated live in PostgreSQL, filterable by date range, status and request type, with CSV export
+- Product catalog: add, edit, archive
+- Staff accounts: create employees or admins, deactivate (signs them out immediately)
+- Return policy: return window, customer cancellations, attachment limit
+- Request monitor: everything an employee can do, plus assigning work to anyone
+
+### Enforced by the API, not just the UI
+- Customers can only ever see their own purchases, requests, comments and files (other people's come back as 404)
+- A request can't ask for more units than are still returnable
+- Only valid status changes are accepted, and each one is written to an audit log in the same transaction
+- Decisions and fulfillment can't happen twice, even when two people click at the same moment (row-level locking, covered by a test)
+
+<details>
+<summary><strong>The seven charts and how each is calculated</strong></summary>
+
+| Chart | Type | Metric |
+|---|---|---|
+| Monthly return requests | Line | Requests grouped by month created |
+| Returns by product category | Bar | Requests grouped by the purchased product's category |
+| Request status distribution | Donut | Requests grouped by current status |
+| Most common return reasons | Horizontal bar | Requests grouped by selected reason |
+| Average resolution time | Line | Mean days from creation to closure, closed requests only, by month closed |
+| Employee workload | Bar | Open requests assigned to each active staff member |
+| Approval vs. rejection trends | Grouped bar | Decisions grouped by month decided |
+
+KPIs: total requests, pending review, approval rate (approved ÷ decided; shows **N/A**, not 0%, when
+nothing has been decided), and average resolution days.
+</details>
 
 ## Screenshots
 
-| | |
+| Customer dashboard | Submitting a return |
 |---|---|
-| ![Customer dashboard](docs/screenshots/02-customer-dashboard.png) Customer dashboard | ![New request](docs/screenshots/04-new-request.png) Submitting a return |
-| ![Request detail](docs/screenshots/05-customer-request-detail.png) Request timeline and conversation | ![Work queue](docs/screenshots/07-work-queue.png) Employee work queue |
-| ![Review](docs/screenshots/08-review-request.png) Reviewing a request | ![Reject dialog](docs/screenshots/09-reject-dialog.png) Rejection requires a reason |
-| ![Products](docs/screenshots/11-admin-products.png) Product management | ![Mobile](docs/screenshots/14-mobile-analytics.png) Responsive layout |
+| ![Customer dashboard](docs/screenshots/02-customer-dashboard.png) | ![New request form](docs/screenshots/04-new-request.png) |
+| **Request timeline and conversation** | **Employee work queue** |
+| ![Request detail](docs/screenshots/05-customer-request-detail.png) | ![Work queue](docs/screenshots/07-work-queue.png) |
+| **Reviewing a request** | **Rejections require a reason** |
+| ![Review screen](docs/screenshots/08-review-request.png) | ![Reject dialog](docs/screenshots/09-reject-dialog.png) |
+| **Product management** | **Works on phones** |
+| ![Products](docs/screenshots/11-admin-products.png) | <img src="docs/screenshots/14-mobile-analytics.png" alt="Mobile layout" width="260" /> |
 
-The full set is in [`docs/screenshots`](docs/screenshots). They're generated from the seeded demo
-data by a Playwright script (`npx playwright test --project=screenshots`).
+All 14 screenshots are in [`docs/screenshots`](docs/screenshots). They're generated from the demo
+data by a Playwright script, so they always match the current UI.
 
-## Architecture
+## Tech stack
 
-```mermaid
-flowchart LR
-    B["React SPA"] -- "/api (cookie + CSRF header)" --> N["nginx / Vite proxy"]
-    N --> A["FastAPI"]
-    A --> S["Business rules<br/>services/"]
-    S --> P[("PostgreSQL")]
-    A --> U[("Uploads")]
-```
+| Layer | Tools | Why |
+|---|---|---|
+| Frontend | React 19, Vite, React Router 7, Tailwind CSS 4, Axios, Lucide icons | Fast dev server, simple component model, utility CSS for a consistent design |
+| Charts | Recharts 3 | Declarative React charts that are responsive out of the box |
+| Backend | Python 3.12, FastAPI, Pydantic 2, Uvicorn | Typed request validation and automatic OpenAPI docs |
+| Database | PostgreSQL 16, SQLAlchemy 2, Alembic | Relational data with constraints, row locks for safe concurrent updates, versioned migrations |
+| Auth | Server-side sessions, `HttpOnly` cookie, CSRF token, Argon2 password hashing | Sessions can be revoked instantly; tokens aren't readable by scripts |
+| Testing | Pytest, Vitest + React Testing Library, Playwright | API rules, UI components and full browser journeys |
+| Tooling | Docker Compose, nginx, GitHub Actions, Ruff, ESLint, Prettier | One-command local stack and checks on every push |
 
-A single FastAPI service and a React single-page app, served from one origin. Sessions are
-server-side rows referenced by an `HttpOnly` cookie, with a per-session CSRF token. More detail,
-including the request lifecycle and auth sequence diagrams, is in
-[docs/architecture](docs/architecture/README.md). The ER diagram and schema notes are in
-[docs/database](docs/database/README.md), and every endpoint is listed in [docs/api](docs/api/README.md).
+## Run it locally
 
-Request lifecycle:
-`pending_review → under_review → approved → fulfilled → closed`, or `under_review → rejected → closed`,
-or `cancelled` before a decision.
+You can run ReturnDesk with **Docker** (easiest: nothing else to install) or **directly on your
+machine** (better for development, with hot reload).
 
-## Running it locally
+### Option A: Docker
 
-### Option 1: Docker (one command)
-
-Needs Docker Desktop.
+**Prerequisite:** [Docker Desktop](https://www.docker.com/products/docker-desktop/), running.
 
 ```bash
 git clone https://github.com/saxipatel-dev/returndesk.git
@@ -100,68 +117,96 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open **http://localhost:8080**. The API container runs migrations and loads demo data on first
-start. API docs are at http://localhost:8080/api/docs.
+The first build takes a few minutes. When the log shows `Uvicorn running`, open
+**http://localhost:8080** and sign in with a [demo account](#demo-accounts).
 
-### Option 2: run the pieces yourself
+| What | Where |
+|---|---|
+| App | http://localhost:8080 |
+| API docs (Swagger) | http://localhost:8080/api/docs |
+| Health check | http://localhost:8080/health |
+| PostgreSQL (from your machine) | `localhost:5433`, user/db `returndesk`, password from `.env` |
 
-Needs Python 3.12+, Node 22+ and PostgreSQL 14+.
+Stop with `Ctrl+C` or `docker compose down`. Data is kept in a Docker volume; to start completely
+fresh run `docker compose down -v`.
+
+### Option B: run on your machine
+
+**Prerequisites:** Python 3.12+, Node.js 22+, PostgreSQL 14+. On macOS with Homebrew:
 
 ```bash
-# Database
-createuser returndesk --pwprompt         # use "returndesk" to match the defaults
-createdb -O returndesk returndesk
-createdb -O returndesk returndesk_test   # only needed for the backend tests
+brew install python@3.12 node postgresql@16
+brew link --force postgresql@16        # versioned Postgres isn't added to PATH by default
+brew services start postgresql@16
+```
 
-# Backend (http://localhost:8000)
+**1. Create the database user and databases** (one time)
+
+```bash
+psql postgres -c "CREATE ROLE returndesk LOGIN PASSWORD 'returndesk' CREATEDB;"
+createdb -O returndesk returndesk        # the app
+createdb -O returndesk returndesk_test   # backend tests
+createdb -O returndesk returndesk_e2e    # Playwright tests
+```
+
+**2. Start the backend** (terminal 1, runs on http://localhost:8000)
+
+```bash
 cd backend
-python3 -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/alembic upgrade head
-.venv/bin/python -m app.seed             # demo data (add --reset to start over)
+.venv/bin/alembic upgrade head      # create tables
+.venv/bin/python -m app.seed        # load demo data (use --reset to start over)
 .venv/bin/uvicorn app.main:app --reload
+```
 
-# Frontend (http://localhost:5173), in a second terminal
+**3. Start the frontend** (terminal 2, runs on http://localhost:5173)
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The backend reads its settings from environment variables or `backend/.env`; every variable is
-explained in [`.env.example`](.env.example). The defaults work for the setup above.
+Open **http://localhost:5173**. Vite forwards `/api` requests to the backend, so there's nothing
+else to configure. The defaults match the database created in step 1; to use different
+credentials, put a `DATABASE_URL` in `backend/.env` (every setting is explained in
+[`.env.example`](.env.example)).
 
-## Demo accounts
+### Demo accounts
 
-Created by the seed script, for local and demo use only. The password for all of them is `Demo#2026`.
+Created by the seed script for local use. **Password for all of them: `Demo#2026`**.
 
-| Role | Email |
+| Role | Email | Try this |
+|---|---|---|
+| Customer | `customer@example.com` | Start a return from **My purchases** |
+| Employee | `priya@example.com` | Pick up a request in **Work queue** and approve it |
+| Administrator | `admin@example.com` | Explore **Analytics** and change the date filter |
+
+The login page has buttons that fill these in. A guided five-minute walkthrough is in
+[docs/demo-script.md](docs/demo-script.md).
+
+### Troubleshooting
+
+| Problem | Fix |
 |---|---|
-| Customer | `customer@example.com` |
-| Employee | `priya@example.com` |
-| Administrator | `admin@example.com` |
-
-The login page has buttons that fill these in (hide them with `VITE_SHOW_DEMO_ACCOUNTS=false`).
-The seed refuses to run when `ENVIRONMENT=production` unless explicitly told to, and there's no
-built-in production admin password; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+| `port is already allocated` (Docker) | Change `WEB_PORT` or `DB_PORT` in `.env` |
+| `connection refused` to PostgreSQL | Make sure Postgres is running (`brew services list`) |
+| `role "returndesk" does not exist` | Run step 1 of Option B |
+| Login works but pages show "We couldn't load this" | The backend isn't running on port 8000 |
+| Want a clean slate | `backend/.venv/bin/python -m app.seed --reset` (or `docker compose down -v`) |
 
 ## Tests
 
-```bash
-# Backend: 85 tests (auth, authorization, return rules, workflow, analytics, uploads, seed)
-cd backend && .venv/bin/pytest
+| Suite | Count | Command |
+|---|---|---|
+| Backend: auth, permissions, return rules, workflow, analytics, uploads | 85 | `cd backend && .venv/bin/pytest` |
+| Frontend: components, forms, utilities | 36 | `cd frontend && npm test` |
+| End-to-end: real browser, API and database | 11 | `cd frontend && npx playwright install chromium && npx playwright test --project=e2e` |
 
-# Frontend: 36 unit/component tests
-cd frontend && npm test
-
-# End-to-end: 5 Playwright tests against a real API + database (uses its own returndesk_e2e DB)
-createdb -O returndesk returndesk_e2e
-cd frontend && npx playwright install chromium && npx playwright test --project=e2e
-```
-
-[![CI](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saxipatel-dev/returndesk/actions/workflows/ci.yml)
-
-GitHub Actions runs linting, migrations (up/down), all three test suites and the Docker builds on
-every push. Latest local results are recorded in [TESTING_REPORT.md](TESTING_REPORT.md).
+Linting: `ruff check .` (backend) and `npm run lint` (frontend). GitHub Actions runs all of it,
+plus a migration up/down check and the Docker builds, on every push. The latest results are in
+[TESTING_REPORT.md](TESTING_REPORT.md).
 
 ## Project structure
 
@@ -169,45 +214,67 @@ every push. Latest local results are recorded in [TESTING_REPORT.md](TESTING_REP
 returndesk/
 ├── backend/
 │   ├── app/
-│   │   ├── api/          # FastAPI routers (auth, catalog, returns, admin)
-│   │   ├── core/         # settings, database, security, auth dependencies
-│   │   ├── models/       # SQLAlchemy models and enums
+│   │   ├── api/          # routes: auth, catalog, returns, admin
+│   │   ├── core/         # settings, database, password hashing, auth dependencies
+│   │   ├── models/       # SQLAlchemy tables and enums
 │   │   ├── schemas/      # Pydantic request/response models
 │   │   ├── services/     # business rules: workflow, analytics, uploads, notifications
-│   │   └── seed.py       # deterministic demo data
+│   │   └── seed.py       # demo data
 │   ├── alembic/          # migrations
-│   └── tests/            # pytest
+│   └── tests/
 ├── frontend/
 │   ├── src/
-│   │   ├── api/  components/  context/  hooks/  pages/  utils/
-│   └── tests/            # unit/ (Vitest + RTL) and e2e/ (Playwright)
-├── docs/                 # architecture, database, API, requirements, testing, screenshots
-├── .github/workflows/    # CI
+│   │   ├── api/          # Axios client and endpoint functions
+│   │   ├── components/   # UI kit, layout, request views, charts
+│   │   ├── pages/        # auth, customer, staff, admin, shared
+│   │   └── ...           # context, hooks, utils
+│   └── tests/            # unit/ (Vitest) and e2e/ (Playwright)
+├── docs/                 # architecture, database, API, testing, screenshots
 ├── docker-compose.yml
-└── render.yaml           # optional cloud deployment blueprint
+└── render.yaml           # deployment blueprint, kept for later (not deployed)
 ```
 
-## Design decisions
+## How it works
 
-The main ones are below; the reasoning behind each is in [DECISIONS.md](DECISIONS.md).
+```mermaid
+flowchart LR
+    B["React app"] -- "/api + session cookie" --> N["nginx (Docker)<br/>or Vite (dev)"]
+    N --> A["FastAPI routes"]
+    A --> S["Business rules<br/>services/"]
+    S --> P[("PostgreSQL")]
+    A --> U[("Uploaded files")]
+```
 
-- **Server-side sessions in an `HttpOnly` cookie** instead of JWTs in local storage: logout and
-  deactivation take effect immediately, and scripts can't read the token.
-- **One origin** (nginx or Vite proxies `/api`), so the cookie can stay `SameSite=Lax`.
-- **Business rules in a service module**, not in route handlers, and row locks for decisions.
-- **Analytics computed in SQL** on every request instead of cached tables; easy to verify, fast enough at this size.
-- **Status history as an append-only events table** written in the same transaction as the change.
+The browser only ever talks to one origin: nginx (or Vite in development) serves the React app and
+forwards `/api` to FastAPI. Requests move through
+`pending_review → under_review → approved → fulfilled → closed`, or end as `rejected` or `cancelled`.
+The reasoning behind the main choices (sessions vs. JWT, SQL analytics, row locks) is in
+[DECISIONS.md](DECISIONS.md).
 
-## Limitations and future work
+## Documentation
 
-Things I left out or simplified on purpose (details in [KNOWN_ISSUES.md](KNOWN_ISSUES.md)):
+| Document | What's in it |
+|---|---|
+| [Architecture](docs/architecture/README.md) | Components, request lifecycle and auth diagrams |
+| [Database](docs/database/README.md) | ER diagram and schema notes |
+| [API reference](docs/api/README.md) | Every endpoint, error codes, metric definitions, curl examples |
+| [Requirements](docs/requirements/README.md) | Scope, roles, screens, business rules and the tests that cover them |
+| [Testing guide](docs/testing/README.md) | How the test suites are set up and run |
+| [Deployment](docs/DEPLOYMENT.md) | Ready-to-use cloud setup for later (nothing is deployed) |
+| [Testing report](TESTING_REPORT.md) · [Progress](PROJECT_PROGRESS.md) · [Decisions](DECISIONS.md) · [Known issues](KNOWN_ISSUES.md) | Project records |
 
-- No email: notifications are in-app only.
-- Refunds and replacements are simulated; there's no payment or shipping integration.
-- Uploaded files are stored on local disk. A cloud deployment would want object storage.
-- No login rate limiting or password reset flow yet.
-- Not deployed publicly yet: the Render blueprint is ready, but deploying needs an account.
+## Status and limitations
+
+ReturnDesk is feature-complete for this version and runs locally. It is **not deployed** to a
+public server; the deployment configuration is ready for when it is. Simplified on purpose:
+
+- Notifications are in-app only (no email), and there's no password reset yet
+- Refunds, replacements and repairs are simulated; no payment or shipping integration
+- Uploaded files are stored on local disk
+- No login rate limiting yet
+
+Details are in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Built by [saxipatel-dev](https://github.com/saxipatel-dev) as a self-directed portfolio project.

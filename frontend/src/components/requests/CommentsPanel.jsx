@@ -105,6 +105,8 @@ export default function CommentsPanel({ requestId, onPosted }) {
           placeholder={internal ? "Write an internal note…" : "Write a message…"}
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          // Locked while sending so text typed meanwhile isn't wiped when the box clears.
+          readOnly={posting}
         />
         <div className="mt-2 flex items-center justify-between gap-3">
           {isStaff ? (
